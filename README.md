@@ -58,24 +58,24 @@ These two problems — where conflict happens, and where corridors are breaking 
 
 ## 6. Data Sources
 
-*(All sources below are public and independent of any prior/inaccessible project — the pipeline is fully reproducible from scratch.)*
+*(All sources below are public and independent of any prior/inaccessible project. Two sources listed here were the original plan but were replaced during the build — noted explicitly, not silently swapped. See Current Status and ETL Workflow for what was actually used.)*
 
-| Source | What it provides | Format / access |
-|---|---|---|
-| **GBIF** (Global Biodiversity Information Facility) | Elephant (*Loxodonta africana*) occurrence records for Kenya, pooled from 50+ contributing datasets including a KWS Laikipia-Samburu aerial census and iNaturalist observations | Darwin Core Archive / CSV via gbif.org query or API, filtered to `country=Kenya`, `has coordinate=true` |
-| **WDPA** (World Database on Protected Areas / Protected Planet, UNEP-WCMC & IUCN) | Kenya's protected-area boundaries, IUCN category, designation, size, year established | Shapefile/geodatabase from protectedplanet.net (also available as a ready Earth Engine asset: `WCMC/WDPA/current/polygons`), filtered to Kenya |
-| **WorldPop** | Population density raster (~1km resolution) — human-pressure proxy | GeoTIFF, worldpop.org, Kenya extract |
-| **OpenStreetMap** (via Overpass API / OSMnx) | Roads, settlements, cropland/land-use tags | GeoJSON, Kenya extract |
-| African Elephant Database / KWS range reports (secondary, for validation) | Known elephant range and corridor maps, used to sanity-check identified corridors | PDF/report — manual reference, not a pipeline input |
-| News/incident reports (optional, stretch) | Spot-validation of conflict hotspots | Manual/scraped |
+| Source | What it provides | Format / access | Status |
+|---|---|---|---|
+| **GBIF** (Global Biodiversity Information Facility) | Elephant (*Loxodonta africana*) occurrence records for Kenya, pooled from 50+ contributing datasets including a KWS Laikipia-Samburu aerial census and iNaturalist observations | Darwin Core Archive / CSV via gbif.org query or API, filtered to `country=Kenya`, `has coordinate=true` | ✅ Used — 4,265 records |
+| ~~WDPA~~ (World Database on Protected Areas) | Was the original plan for protected-area boundaries | Shapefile/geodatabase from protectedplanet.net | ❌ Replaced — the global shapefile export was unreliable to extract/access under the project timeline |
+| **OpenStreetMap / Nominatim** (via OSMnx `geocode_to_gdf`) | Protected-area boundaries by name, geocoded individually | Live API, polygon per named reserve | ✅ Used instead of WDPA — 13/13 target reserves |
+| ~~WorldPop~~ | Was the original plan for population-density human-pressure proxy | GeoTIFF, worldpop.org | ❌ Dropped from scope — replaced by settlement/road proximity instead |
+| ~~OpenStreetMap Overpass API~~ (live roads/settlements/cropland pull) | Was the original plan for roads, settlements, cropland | GeoJSON via Overpass | ❌ Replaced — live queries consistently timed out (network-level, confirmed across a default and an alternate mirror) |
+| **Manually compiled reference data** | 15 major towns and 4 major highway routes relevant to the corridor landscape | Hand-curated CSV/coordinates in `src/etl/build_manual_infrastructure_fallback.py` | ✅ Used instead — a stated, documented limitation, not a hidden shortcut |
+| African Elephant Database / KWS range reports (secondary, for validation) | Known elephant range and corridor maps, used to sanity-check identified corridors | PDF/report — manual reference, not a pipeline input | Used informally — top risk zones (Kimana, Isiolo, Archer's Post, Voi) are consistent with known reporting |
 
 ## 7. ETL Workflow
 
 1. **Extract**
-   - Query GBIF for *Loxodonta africana* occurrences in Kenya (`has coordinate = true`) and download as CSV/Darwin Core Archive.
-   - Download WDPA protected-area polygons for Kenya from Protected Planet (or pull the `WCMC/WDPA/current/polygons` Earth Engine asset).
-   - Download WorldPop population raster for Kenya.
-   - Pull OSM roads/settlements/cropland for Kenya via Overpass/OSMnx.
+   - Query GBIF for *Loxodonta africana* occurrences in Kenya (`has coordinate = true`) and download via the REST API (`src/etl/pull_gbif_elephants.py`).
+   - Geocode 13 named protected areas via OSMnx/Nominatim (`src/etl/pull_protected_areas_osm.py`).
+   - Build a manually compiled settlements + roads reference for the corridor landscape (`src/etl/build_manual_infrastructure_fallback.py`) — a live Overpass-based version (`src/etl/pull_osm_infrastructure.py`) exists and can replace this if network access improves.
 2. **Load to BigQuery** — create a new BigQuery project/dataset (free tier) and load each source as a staging table: `elephant_occurrences`, `protected_areas`, `population_grid`, `roads`, `settlements`, `cropland`.
 3. **Transform**
    - Build a grid (hex or square cells) over Kenya's elephant range extent.
@@ -101,12 +101,13 @@ These two problems — where conflict happens, and where corridors are breaking 
 
 - **Data warehouse:** Google BigQuery (including BigQuery GIS functions)
 - **Processing:** Python, Pandas, GeoPandas, NumPy
-- **Network/corridor analysis:** NetworkX (betweenness centrality, least-cost paths) — descriptive graph metrics, no training involved
-- **Road/settlement data:** OSMnx
+- **Network/corridor analysis:** simplified pairwise gap-distance analysis between protected areas (a scoped-down stand-in for full betweenness-centrality/graph analysis, given the project timeline — see Future Improvements)
+- **Data acquisition:** GBIF REST API (elephant occurrences), OSMnx/Nominatim (protected-area boundaries by name), manually compiled fallback data for roads/settlements (see Data Sources note below)
 - **Scoring:** plain Python/Pandas for min-max normalization and the documented weighted-sum score (no scikit-learn model fitting)
-- **Mapping:** Plotly, Folium
-- **Dashboard:** Looker Studio (connected live to BigQuery)
-- **Web app:** Streamlit
+- **Warehouse:** Google BigQuery (elephant occurrences and scored conflict-risk grid loaded as tables)
+- **Mapping:** Plotly
+- **Dashboard:** Looker Studio (connected live to BigQuery) — *pending, see Current Status*
+- **Web app:** Streamlit (also serves as the project's dashboard view — metrics, map, ranked table — while the separate Looker Studio dashboard is being finished)
 - **Version control:** Git/GitHub
 
 ## 10. Project Structure
@@ -114,18 +115,14 @@ These two problems — where conflict happens, and where corridors are breaking 
 ```
 tembo-corridors/
 ├── data/
-│   ├── raw/                # WorldPop, OSM extracts
-│   └── processed/          # cleaned, joined feature/grid tables
-├── sql/
-│   ├── staging/            # BigQuery staging table DDL
-│   └── scoring/            # spatial join + scoring queries
+│   ├── raw/                # GBIF elephant occurrences
+│   └── processed/          # cleaned protected areas, settlements, roads, scored grid, corridor gaps
 ├── src/
-│   ├── etl/                # extraction + transformation scripts
-│   ├── network/            # corridor graph construction + centrality analysis
-│   ├── scoring/            # composite risk/priority score logic
+│   ├── etl/                # GBIF pull, protected-area pull, OSM infrastructure pull, BigQuery load
+│   ├── scoring/             # grid building, conflict-risk scoring, corridor gap analysis
 │   └── utils/
 ├── app/
-│   └── streamlit_app.py    # interactive web app
+│   └── streamlit_app.py    # interactive web app + dashboard view
 ├── dashboard/
 │   └── looker_studio_link.md
 ├── notebooks/               # exploratory analysis, article figures
@@ -135,27 +132,29 @@ tembo-corridors/
 
 ## 11. Current Status
 
-- [ ] GBIF elephant occurrence data pulled and coverage checked (record count, counties/regions represented).
-- [ ] WDPA protected-area boundaries for Kenya downloaded and validated for spatial joins.
-- [ ] New BigQuery project/dataset created; staging tables loaded.
-- [ ] WorldPop + OSM ingestion pipeline built.
-- [ ] Grid built and per-cell features computed.
-- [ ] Conflict-risk score computed and mapped.
-- [ ] Corridor graph built; centrality/pinch-point analysis run.
-- [ ] Composite priority score finalized, weights documented.
-- [ ] Dashboard built.
-- [ ] Streamlit app built.
+- [x] GBIF elephant occurrence data pulled and coverage checked — 4,265 records, concentrated in Narok, Kajiado, Taita Taveta, Laikipia, Isiolo, and Samburu (the corridor landscape, as expected). Note: ~80% of records come from iNaturalist citizen-science observations, so this reflects observation effort/presence more than true density — documented as a limitation.
+- [x] Protected-area boundaries sourced — **switched from WDPA to OSM/Nominatim** after the WDPA global shapefile export proved unreliable to extract under the project timeline (see Data Sources note below). 13 of 13 target reserves successfully geocoded (Maasai Mara, Amboseli, Tsavo East/West, Chyulu Hills, Ol Pejeta, Lewa, Borana, Solio, Samburu, Buffalo Springs, Shaba, Meru).
+- [x] New BigQuery project/dataset created; `elephant_occurrences` and `conflict_risk_grid` tables loaded.
+- [x] Roads/settlements sourced — **live Overpass API pulls consistently failed** (network-level timeout to overpass-api.de from the development machine, confirmed across multiple attempts and an alternate mirror). Replaced with a manually compiled, stated-limitation fallback: 15 major towns and 4 major highway routes relevant to the corridor landscape. WorldPop population raster was dropped from scope entirely in favor of this settlement/road proximity approach.
+- [x] Grid built (1,209 cells, ~11km resolution) and per-cell features computed (elephant density, distance to settlement, distance to road, inside-protected-area flag).
+- [x] Conflict-risk score computed: transparent weighted formula (40% elephant presence, 30% settlement proximity, 30% road proximity). 188 cells flagged as priority zones (high risk, currently unprotected). Top results cluster around Kimana, Isiolo, Archer's Post, and Voi — independently consistent with known Kenyan human-elephant conflict reporting.
+- [x] Corridor analysis — **simplified from full betweenness-centrality graph analysis to pairwise gap-distance analysis** between the 13 protected areas, given the project timeline. This is a stated scope reduction, not a hidden shortcut (see Future Improvements).
+- [x] Streamlit app built — combines the dashboard view (summary metrics, risk map) and the interactive explorer (filters, single-cell breakdown) in one deliverable.
+- [ ] Looker Studio dashboard connected to BigQuery — pending.
 - [ ] Technical article written.
 
 ## 12. Future Improvements
 
 - Incorporate real KWS/county-level HEC incident or compensation-claim data, if accessible, to validate the descriptive risk indicators against actual outcomes rather than proxies alone.
+- Replace the manually compiled roads/settlements fallback with a live OSM pull once network access to Overpass is available (the code for this already exists in `src/etl/pull_osm_infrastructure.py` — it simply couldn't complete under this project's network conditions).
+- Replace the simplified pairwise corridor-gap analysis with a full graph-theory network (betweenness centrality across a denser habitat-patch grid, not just named reserves) for genuine pinch-point identification.
 - *(Out of current scope, flagged as a possible next phase, not part of this capstone):* explore a trained Graph Neural Network to enable "what happens if we add this road" simulations — this would move the project from analytics into machine learning.
 - Extend the same descriptive framework to other conflict-prone species (lion, buffalo) as additional layers.
 - Fold this in as one module of a broader Kenya conservation-priority platform (the earlier "Hifadhi Index" concept), once this species-specific analysis is proven.
 
 ## 13. Recommendations
 
-- Keep the risk and corridor scores separately visible (not just the combined number) — a planner needs to know *why* a location ranked high.
-- Validate at least a handful of top-ranked conflict zones and corridors against known reporting (news, KWS/Trust reports) before presenting results as fact.
+- Keep the risk and corridor-gap results separately visible (not just a combined number) — a planner needs to know *why* a location ranked high.
+- Validate at least a handful of top-ranked conflict zones against known reporting (news, KWS/Trust reports) before presenting results as fact — the Kimana/Isiolo/Archer's Post/Voi clustering already does this informally and holds up.
 - Frame this explicitly as a decision-support and prioritization tool, not a guarantee of where conflict will occur.
+- Treat the manually compiled roads/settlements data and the simplified corridor-gap analysis as documented, load-bearing limitations of this version — not omissions to gloss over in the write-up.

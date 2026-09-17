@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"name": "roads_corridor",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "A109 Nairobi-Mombasa Highway (via Tsavo)" }, "geometry": { "type": "LineString", "coordinates": [ [ 37.5, -2.2333 ], [ 38.1667, -2.6833 ], [ 38.5561, -3.3961 ] ] } },
+{ "type": "Feature", "properties": { "name": "B3 Emali-Loitokitok Road (toward Amboseli)" }, "geometry": { "type": "LineString", "coordinates": [ [ 37.5, -2.2333 ], [ 37.524, -2.877 ], [ 37.5088, -2.9767 ] ] } },
+{ "type": "Feature", "properties": { "name": "A2 Nairobi-Isiolo-Moyale Highway (Great North Road)" }, "geometry": { "type": "LineString", "coordinates": [ [ 37.0733, 0.0167 ], [ 37.5822, 0.3546 ], [ 37.6702, 0.6314 ] ] } },
+{ "type": "Feature", "properties": { "name": "Narok-Mara Road (B3/C12)" }, "geometry": { "type": "LineString", "coordinates": [ [ 35.8667, -1.0833 ], [ 34.8667, -1.0167 ] ] } }
+]
+}

@@ -1,0 +1,79 @@
+reserve_a,reserve_b,gap_km,critical
+"Chyulu Hills National Park, Kenya","Tsavo West National Park, Kenya",0.0,True
+"Tsavo East National Park, Kenya","Tsavo West National Park, Kenya",0.0,True
+"Lewa Wildlife Conservancy, Kenya","Borana Conservancy, Kenya",0.0,True
+"Samburu National Reserve, Kenya","Buffalo Springs National Reserve, Kenya",0.0,True
+"Buffalo Springs National Reserve, Kenya","Shaba National Reserve, Kenya",4.1,True
+"Ol Pejeta Conservancy, Kenya","Solio Game Reserve, Kenya",4.1,True
+"Samburu National Reserve, Kenya","Shaba National Reserve, Kenya",7.1,True
+"Lewa Wildlife Conservancy, Kenya","Buffalo Springs National Reserve, Kenya",25.7,True
+"Chyulu Hills National Park, Kenya","Tsavo East National Park, Kenya",26.3,True
+"Borana Conservancy, Kenya","Buffalo Springs National Reserve, Kenya",31.2,True
+"Lewa Wildlife Conservancy, Kenya","Samburu National Reserve, Kenya",31.4,True
+"Ol Pejeta Conservancy, Kenya","Borana Conservancy, Kenya",32.5,True
+"Borana Conservancy, Kenya","Samburu National Reserve, Kenya",34.5,True
+"Amboseli National Park, Kenya","Chyulu Hills National Park, Kenya",43.0,True
+"Shaba National Reserve, Kenya","Meru National Park, Kenya",43.1,True
+"Ol Pejeta Conservancy, Kenya","Lewa Wildlife Conservancy, Kenya",45.2,True
+"Lewa Wildlife Conservancy, Kenya","Shaba National Reserve, Kenya",45.3,True
+"Borana Conservancy, Kenya","Solio Game Reserve, Kenya",48.5,True
+"Borana Conservancy, Kenya","Shaba National Reserve, Kenya",54.9,True
+"Lewa Wildlife Conservancy, Kenya","Solio Game Reserve, Kenya",55.1,True
+"Lewa Wildlife Conservancy, Kenya","Meru National Park, Kenya",56.7,True
+"Buffalo Springs National Reserve, Kenya","Meru National Park, Kenya",56.8,True
+"Amboseli National Park, Kenya","Tsavo West National Park, Kenya",59.6,True
+"Samburu National Reserve, Kenya","Meru National Park, Kenya",63.3,False
+"Borana Conservancy, Kenya","Meru National Park, Kenya",73.4,False
+"Ol Pejeta Conservancy, Kenya","Samburu National Reserve, Kenya",76.0,False
+"Ol Pejeta Conservancy, Kenya","Buffalo Springs National Reserve, Kenya",78.0,False
+"Amboseli National Park, Kenya","Tsavo East National Park, Kenya",90.6,False
+"Solio Game Reserve, Kenya","Buffalo Springs National Reserve, Kenya",94.0,False
+"Solio Game Reserve, Kenya","Samburu National Reserve, Kenya",94.9,False
+"Ol Pejeta Conservancy, Kenya","Shaba National Reserve, Kenya",103.0,False
+"Ol Pejeta Conservancy, Kenya","Meru National Park, Kenya",113.4,False
+"Solio Game Reserve, Kenya","Meru National Park, Kenya",114.8,False
+"Solio Game Reserve, Kenya","Shaba National Reserve, Kenya",117.9,False
+"Tsavo East National Park, Kenya","Meru National Park, Kenya",212.4,False
+"Masai Mara National Reserve, Kenya","Amboseli National Park, Kenya",218.3,False
+"Masai Mara National Reserve, Kenya","Solio Game Reserve, Kenya",222.3,False
+"Masai Mara National Reserve, Kenya","Ol Pejeta Conservancy, Kenya",226.8,False
+"Chyulu Hills National Park, Kenya","Solio Game Reserve, Kenya",240.9,False
+"Amboseli National Park, Kenya","Solio Game Reserve, Kenya",255.2,False
+"Chyulu Hills National Park, Kenya","Ol Pejeta Conservancy, Kenya",256.0,False
+"Chyulu Hills National Park, Kenya","Meru National Park, Kenya",256.9,False
+"Masai Mara National Reserve, Kenya","Chyulu Hills National Park, Kenya",257.3,False
+"Tsavo East National Park, Kenya","Solio Game Reserve, Kenya",264.7,False
+"Tsavo East National Park, Kenya","Lewa Wildlife Conservancy, Kenya",265.8,False
+"Chyulu Hills National Park, Kenya","Lewa Wildlife Conservancy, Kenya",270.4,False
+"Amboseli National Park, Kenya","Ol Pejeta Conservancy, Kenya",271.6,False
+"Tsavo East National Park, Kenya","Ol Pejeta Conservancy, Kenya",276.7,False
+"Tsavo East National Park, Kenya","Borana Conservancy, Kenya",276.7,False
+"Chyulu Hills National Park, Kenya","Borana Conservancy, Kenya",277.2,False
+"Masai Mara National Reserve, Kenya","Borana Conservancy, Kenya",284.9,False
+"Tsavo West National Park, Kenya","Meru National Park, Kenya",286.6,False
+"Masai Mara National Reserve, Kenya","Lewa Wildlife Conservancy, Kenya",293.2,False
+"Tsavo East National Park, Kenya","Shaba National Reserve, Kenya",296.2,False
+"Tsavo East National Park, Kenya","Buffalo Springs National Reserve, Kenya",297.6,False
+"Amboseli National Park, Kenya","Lewa Wildlife Conservancy, Kenya",299.1,False
+"Amboseli National Park, Kenya","Meru National Park, Kenya",300.0,False
+"Tsavo West National Park, Kenya","Solio Game Reserve, Kenya",303.0,False
+"Amboseli National Park, Kenya","Borana Conservancy, Kenya",303.3,False
+"Tsavo East National Park, Kenya","Samburu National Reserve, Kenya",304.3,False
+"Chyulu Hills National Park, Kenya","Buffalo Springs National Reserve, Kenya",310.6,False
+"Masai Mara National Reserve, Kenya","Tsavo West National Park, Kenya",310.9,False
+"Masai Mara National Reserve, Kenya","Tsavo East National Park, Kenya",315.0,False
+"Chyulu Hills National Park, Kenya","Samburu National Reserve, Kenya",316.9,False
+"Tsavo West National Park, Kenya","Ol Pejeta Conservancy, Kenya",317.6,False
+"Chyulu Hills National Park, Kenya","Shaba National Reserve, Kenya",319.8,False
+"Tsavo West National Park, Kenya","Lewa Wildlife Conservancy, Kenya",323.1,False
+"Masai Mara National Reserve, Kenya","Samburu National Reserve, Kenya",329.0,False
+"Masai Mara National Reserve, Kenya","Buffalo Springs National Reserve, Kenya",331.1,False
+"Tsavo West National Park, Kenya","Borana Conservancy, Kenya",331.8,False
+"Amboseli National Park, Kenya","Buffalo Springs National Reserve, Kenya",340.5,False
+"Masai Mara National Reserve, Kenya","Meru National Park, Kenya",342.6,False
+"Amboseli National Park, Kenya","Samburu National Reserve, Kenya",346.8,False
+"Amboseli National Park, Kenya","Shaba National Reserve, Kenya",354.9,False
+"Masai Mara National Reserve, Kenya","Shaba National Reserve, Kenya",355.7,False
+"Tsavo West National Park, Kenya","Buffalo Springs National Reserve, Kenya",361.2,False
+"Tsavo West National Park, Kenya","Shaba National Reserve, Kenya",364.2,False
+"Tsavo West National Park, Kenya","Samburu National Reserve, Kenya",367.1,False
