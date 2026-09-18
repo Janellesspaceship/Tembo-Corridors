@@ -43,6 +43,22 @@ st.caption(
     "Amboseli–Tsavo–Laikipia–Samburu Corridor Landscape"
 )
 
+# --- Looker Studio Analytics Dashboard ---
+LOOKER_STUDIO_URL = (
+    "https://datastudio.google.com/reporting/"
+    "b4b16df4-0a6f-4c18-8b82-787b3470a4e0"
+)
+
+st.link_button(
+    "📊 Open Looker Studio Analytics Dashboard →",
+    LOOKER_STUDIO_URL,
+)
+
+st.caption(
+    "Use the Streamlit app for interactive spatial exploration and the "
+    "Looker Studio dashboard for analytical summaries and key findings."
+)
+
 # --- Sidebar filters ---
 st.sidebar.header("Filters")
 show_only_priority = st.sidebar.checkbox(
