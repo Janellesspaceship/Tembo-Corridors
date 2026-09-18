@@ -16,13 +16,14 @@ Set PROJECT_ID and DATASET_ID below to your own values before running.
 import pandas as pd
 from google.cloud import bigquery
 
-PROJECT_ID = "africas-talking-bwai"    
+PROJECT_ID = "africas-talking-bwai"     
 DATASET_ID = "tembo_corridors"          # created automatically if it doesn't exist
-LOCATION = "US"                          # or e.g. "europe-west1" — pick once, keep consistent
+LOCATION = "US"                          
 
 TABLES_TO_LOAD = {
     "elephant_occurrences": "data/raw/elephant_occurrences_kenya.csv",
-    "conflict_risk_grid": "data/processed/conflict_risk_grid.csv",
+    "combined_priority_grid": "data/processed/combined_priority_grid.csv",
+    "corridor_gaps": "data/processed/corridor_gaps.csv",
 }
 
 
