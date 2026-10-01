@@ -10,11 +10,13 @@ Run with: streamlit run app/streamlit_app.py
 
 import json
 
+import folium
 import geopandas as gpd
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
+from shapely.ops import nearest_points
+from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Tembo Corridors", page_icon="🐘", layout="wide")
 
@@ -41,22 +43,6 @@ st.title("🐘 Tembo Corridors")
 st.caption(
     "Human-Elephant Conflict Risk & Priority Zones — Kenya's "
     "Amboseli–Tsavo–Laikipia–Samburu Corridor Landscape"
-)
-
-# --- Looker Studio Analytics Dashboard ---
-LOOKER_STUDIO_URL = (
-    "https://datastudio.google.com/reporting/"
-    "b4b16df4-0a6f-4c18-8b82-787b3470a4e0"
-)
-
-st.link_button(
-    "📊 Open Looker Studio Analytics Dashboard →",
-    LOOKER_STUDIO_URL,
-)
-
-st.caption(
-    "Use the Streamlit app for interactive spatial exploration and the "
-    "Looker Studio dashboard for analytical summaries and key findings."
 )
 
 # --- Sidebar filters ---
@@ -228,58 +214,74 @@ fig_gaps = px.bar(
 fig_gaps.update_layout(yaxis={"categoryorder": "total descending"})
 st.plotly_chart(fig_gaps, use_container_width=True)
 
-# Map of reserves with lines drawn between critical-gap pairs
+# Interactive Google-Maps-style corridor map (Folium/Leaflet):
+# real street & satellite tiles, actual reserve boundary polygons, and gap
+# lines drawn between the TRUE nearest edges of each reserve pair (using
+# shapely's nearest_points — the same measurement corridor_gap_analysis.py
+# already computes gap_km with), not an oversimplified centroid-to-centroid line.
 name_col = "name" if "name" in protected.columns else "query_name"
-protected = protected.copy()
-protected["centroid"] = protected.geometry.centroid
-centroid_lookup = {
-    row[name_col]: (row["centroid"].y, row["centroid"].x)
-    for _, row in protected.iterrows()
-}
+geom_lookup = {row[name_col]: row.geometry for _, row in protected.iterrows()}
 
-fig_map_kwargs = dict(
-    lat=[c[0] for c in centroid_lookup.values()],
-    lon=[c[1] for c in centroid_lookup.values()],
-    text=list(centroid_lookup.keys()),
-    mode="markers+text",
-    textposition="top center",
-    marker=dict(size=10, color="#2ca02c"),
-    name="Reserves",
+show_all_pairs = st.checkbox(
+    "Show all 78 reserve pairs (not just the 23 critical ones)", value=False
 )
-try:
-    reserve_trace = go.Scattermap(**fig_map_kwargs)
-    line_trace_cls = go.Scattermap
-    layout_kwargs = {
-        "map_style": "carto-positron",
-        "map_center": {"lat": -1.0, "lon": 37.0},
-        "map_zoom": 5.5,
-    }
-except AttributeError:
-    reserve_trace = go.Scattermapbox(**fig_map_kwargs)
-    line_trace_cls = go.Scattermapbox
-    layout_kwargs = {
-        "mapbox_style": "carto-positron",
-        "mapbox_center": {"lat": -1.0, "lon": 37.0},
-        "mapbox_zoom": 5.5,
-    }
+gaps_to_draw = gaps if show_all_pairs else gaps[gaps["critical"]]
 
-corridor_fig = go.Figure()
-for _, row in gaps[gaps["critical"]].iterrows():
-    if row["reserve_a"] in centroid_lookup and row["reserve_b"] in centroid_lookup:
-        lat_a, lon_a = centroid_lookup[row["reserve_a"]]
-        lat_b, lon_b = centroid_lookup[row["reserve_b"]]
-        corridor_fig.add_trace(line_trace_cls(
-            lat=[lat_a, lat_b], lon=[lon_a, lon_b],
-            mode="lines", line=dict(width=2, color="#d62728"),
-            showlegend=False, hoverinfo="skip",
-        ))
-corridor_fig.add_trace(reserve_trace)
-corridor_fig.update_layout(
-    height=550,
-    margin={"r": 0, "t": 0, "l": 0, "b": 0},
-    **layout_kwargs,
+m = folium.Map(location=[-1.0, 37.3], zoom_start=7, tiles=None, control_scale=True)
+folium.TileLayer("OpenStreetMap", name="Streets", control=True).add_to(m)
+folium.TileLayer(
+    tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attr="Esri World Imagery",
+    name="Satellite",
+    control=True,
+).add_to(m)
+
+# Reserve boundaries as real polygons, not points
+for _, row in protected.iterrows():
+    popup_html = (
+        f"<b>{row[name_col].replace(', Kenya', '')}</b><br>"
+        f"{row.get('designation_type', '') or ''}<br>"
+        f"IUCN: {row.get('iucn_category_note', 'Not reported') or 'Not reported'}<br>"
+        f"~{row.get('approx_size_km2', '?')} km²"
+    )
+    folium.GeoJson(
+        row.geometry.__geo_interface__,
+        style_function=lambda x: {
+            "fillColor": "#2ca02c", "color": "#1b5e20",
+            "weight": 2, "fillOpacity": 0.3,
+        },
+        tooltip=row[name_col].replace(", Kenya", ""),
+        popup=folium.Popup(popup_html, max_width=250),
+    ).add_to(m)
+
+# Corridor gap lines — drawn between the true nearest boundary points
+for _, row in gaps_to_draw.iterrows():
+    a, b = row["reserve_a"], row["reserve_b"]
+    if a in geom_lookup and b in geom_lookup:
+        pt_a, pt_b = nearest_points(geom_lookup[a], geom_lookup[b])
+        is_critical = bool(row["critical"])
+        label = (
+            f"{a.replace(', Kenya', '')} ↔ {b.replace(', Kenya', '')}: "
+            f"{row['gap_km']:.1f} km" + (" — CRITICAL" if is_critical else "")
+        )
+        folium.PolyLine(
+            locations=[(pt_a.y, pt_a.x), (pt_b.y, pt_b.x)],
+            color="#d62728" if is_critical else "#999999",
+            weight=3.5 if is_critical else 1.2,
+            opacity=0.85 if is_critical else 0.5,
+            dash_array=None if is_critical else "5,5",
+            tooltip=label,
+        ).add_to(m)
+
+folium.LayerControl(collapsed=False).add_to(m)
+st_folium(m, height=600, use_container_width=True)
+
+st.caption(
+    "Green shapes = actual reserve boundaries. Red lines = critical gaps "
+    "(≤60km), drawn between each reserve's true nearest edge — not its "
+    "center — so the line length on the map matches the real distance "
+    "reported in the table below. Toggle Streets/Satellite top-right."
 )
-st.plotly_chart(corridor_fig, use_container_width=True)
 
 st.dataframe(
     gaps[gaps["critical"]].sort_values("gap_km"),
